@@ -18,8 +18,21 @@ class Word():
             self.download_pronunciation()
         return self.pronunciation_audio
 
+    def __str__(self):
+        parts = [
+            '----{0}---- {1}\n'.format(self.word, self.pronunciation or '')]
+        for pos in self.defs:
+            def_list = self.defs[pos]
+            parts.append('[{0}]\n'.format(pos))
+            for idx, d in enumerate(def_list):
+                parts.append('{0}. {1}\n'.format(idx, d.text))
+                if d.example is not None:
+                    parts.append('({0})\n'.format(d.example))
+            parts.append('\n')
+        return ''.join(parts)
+
     def pretty_print(self):
-        print('----{0}---- {1}'.format(self.word, self.pronunciation or ''))
+        print('----{0}---- {1}\n'.format(self.word, self.pronunciation or ''))
         for pos in self.defs:
             def_list = self.defs[pos]
             print('[{0}]'.format(pos))
