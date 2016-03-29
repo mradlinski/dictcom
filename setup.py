@@ -5,7 +5,7 @@ config = {
     'author': 'mromnia',
     'url': 'https://github.com/mromnia/dictcom',
     'author_email': 'mr.omnia.dev@gmail.com',
-    'version': '0.0.2',
+    'version': '0.0.3',
     'install_requires': [
         'requests',
         'beautifulsoup4'
