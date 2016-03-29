@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from bs4 import BeautifulSoup
 from bs4.element import Tag
-from dictcom.Word import Word, Definition
+from dictcom.models import Word, Definition
 
 _MAIN_CONTAINER_CLASS = 'source-box'
 
@@ -9,6 +9,7 @@ _DEF_LIST_CLASS = 'def-list'
 _DEF_SECTIONS_CLASS = 'def-pbk'
 _DEF_POS_HEADER_CLASS_1 = 'dbox-pg'
 _DEF_POS_HEADER_CLASS_2 = 'dbox-bold'
+_DEF_SET_CLASS = 'def-set'
 _DEF_CONTENT_CLASS = 'def-content'
 _EXAMPLE_CLASS = 'def-inline-example'
 
@@ -65,42 +66,35 @@ def parse_unusual_word(main_container):
 
 
 def parse_pos_section(section):
-    pos_pieces = []
-    pos = section.find(class_=_DEF_POS_HEADER_CLASS_1).get_text().strip()
-    pos_pieces.append(pos)
-
-    pos_extra_tag = section.find(class_=_DEF_POS_HEADER_CLASS_2)
-    if pos_extra_tag is not None:
-        pos_extra = pos_extra_tag.get_text().strip()
-        pos_pieces.append('({0})'.format(pos_extra))
+    pos = get_pos(section)
 
     def_list = section.find_all(class_=_DEF_CONTENT_CLASS)
     defs = [parse_def(d) for d in def_list]
 
-    return ' '.join(pos_pieces), defs
+    return pos, defs
+
+
+def get_pos(section):
+    header = section.find('header')
+
+    if header is not None:
+        return header.get_text().strip()
+
+    text = collect_until_class(section, (_DEF_SET_CLASS,))
+    return text
 
 
 def parse_def(defin):
-    text = []
-    example = None
-    parts = defin.children
-
-    for p in parts:
-        if isinstance(p, Tag):
-            if _EXAMPLE_CLASS in p.get('class'):
-                example = p.get_text().strip()
-                break
-            else:
-                text.append(p.get_text().strip())
-        else:
-            text.append(str(p).strip())
-
-    return Definition(' '.join(text), example)
+    text = collect_until_class(defin.children, (_EXAMPLE_CLASS,))
+    example_el = defin.find(class_=_EXAMPLE_CLASS)
+    example = example_el.get_text().strip() if example_el else None
+    return Definition(text, example)
 
 
 def get_pronunciation(def_head):
     try:
-        pronunciation = def_head.find(class_=_PRONUNCIATION_CLASS).get_text()
+        pronunciation = def_head.find(class_=_PRONUNCIATION_CLASS) \
+                                .get_text().strip()
     except:
         return None
     return pronunciation
@@ -112,6 +106,22 @@ def get_pronunciation_url(def_head):
     except:
         return None
     return p_url
+
+
+def collect_until_class(elems, classes):
+    classes = set(classes)
+    text = []
+    for e in elems:
+        if isinstance(e, Tag):
+            el_classes = e.get('class')
+            if (el_classes is not None and
+                    not classes.isdisjoint(el_classes)):
+                break
+            else:
+                text.append(e.get_text())
+        else:
+            text.append(str(e))
+    return ''.join(text).strip()
 
 
 class DictParsingException(Exception):

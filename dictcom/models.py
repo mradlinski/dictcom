@@ -10,43 +10,48 @@ class Word():
         self.pronunciation_audio = None
 
     def download_pronunciation_audio(self):
-        audio, content_type = download_word_pronunciation(self.word)
+        audio, content_type = download_word_pronunciation(
+            self.pronunciation_url)
         self.pronunciation_audio = WordPronunciation(audio, content_type)
 
     def get_pronunciation_audio(self):
         if self.pronunciation_audio is None:
-            self.download_pronunciation()
+            self.download_pronunciation_audio()
         return self.pronunciation_audio
 
     def __str__(self):
         parts = [
-            '----{0}---- {1}\n'.format(self.word, self.pronunciation or '')]
+            '----{}---- {}\n'.format(self.word, self.pronunciation or '')]
         for pos in self.defs:
             def_list = self.defs[pos]
-            parts.append('[{0}]\n'.format(pos))
+            parts.append('[{}]\n'.format(pos))
             for idx, d in enumerate(def_list):
-                parts.append('{0}. {1}\n'.format(idx, d.text))
+                parts.append('{}. {}\n'.format(idx, d.text))
                 if d.example is not None:
-                    parts.append('({0})\n'.format(d.example))
+                    parts.append('({})\n'.format(d.example))
             parts.append('\n')
         return ''.join(parts)
 
-    def pretty_print(self):
-        print('----{0}---- {1}\n'.format(self.word, self.pronunciation or ''))
-        for pos in self.defs:
-            def_list = self.defs[pos]
-            print('[{0}]'.format(pos))
-            for idx, d in enumerate(def_list):
-                print('{0}. {1}'.format(idx, d.text))
-                if d.example is not None:
-                    print('({0})'.format(d.example))
-            print('\n')
+    def __eq__(self, other):
+        return self.word == other.word and \
+            dict(self.defs) == dict(other.defs) and \
+            self.pronunciation == other.pronunciation and \
+            self.pronunciation_url == other.pronunciation_url
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class Definition():
     def __init__(self, text, example=None):
         self.text = text
         self.example = example
+
+    def __eq__(self, other):
+        return self.text == other.text and self.example == other.example
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class WordPronunciation():

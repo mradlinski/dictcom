@@ -5,6 +5,9 @@ _DEFAULT_HEADERS = {
     'user-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36',
     'host': 'www.dictionary.com'
 }
+_DEFAULT_AUDIO_HEADERS = {
+    'user-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36',
+}
 
 
 def get_word_page(word, timeout=None):
@@ -15,7 +18,7 @@ def get_word_page(word, timeout=None):
 
 
 def download_word_pronunciation(url):
-    res = requests.get(url, headers=_DEFAULT_HEADERS)
+    res = requests.get(url, headers=_DEFAULT_AUDIO_HEADERS, stream=True)
     audio = res.content
     content_type = res.headers.get('content-type', 'audio/mpeg3')
     return audio, content_type
